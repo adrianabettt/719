@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DNS e Endereços IP – Atividade Interativa</title>
+<style>
+:root {
+  --azul: #1a6fd4;
+  --azul-claro: #e8f2ff;
+  --azul-medio: #3d8ef5;
+  --verde: #16a34a;
+  --verde-claro: #dcfce7;
+  --vermelho: #dc2626;
+  --vermelho-claro: #fee2e2;
+  --amarelo: #d97706;
+  --amarelo-claro: #fef3c7;
+  --roxo: #7c3aed;
+  --roxo-claro: #ede9fe;
+  --laranja: #ea580c;
+  --laranja-claro: #ffedd5;
+  --cinza: #64748b;
+  --cinza-claro: #f1f5f9;
+  --branco: #ffffff;
+  --texto: #1e293b;
+  --borda: #e2e8f0;
+  --sombra: 0 4px 6px rgba(0,0,0,0.07);
+  --radius: 14px;
+  --radius-sm: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #e8f2ff 0%, #f0e6ff 100%);
+  min-height: 100vh;
+  color: var(--texto);
+}
+.topo {
+  background: linear-gradient(135deg, #1a6fd4 0%, #7c3aed 100%);
+  color: white;
+  padding: 28px 20px 20px;
+  text-align: center;
+}
+.topo .badge {
+  display: inline-block;
+  background: rgba(255,255,255,0.22);
+  border-radius: 20px;
+  padding: 4px 16px;
+  font-size: 13px;
+  margin-bottom: 10px;
+  letter-spacing: .5px;
+}
+.topo h1 { font-size: clamp(20px, 5vw, 30px); font-weight: 700; margin-bottom: 6px; }
+.topo p { font-size: 14px; opacity: .88; }
+.progresso-bar-wrap { background: rgba(255,255,255,0.2); border-radius: 20px; height: 8px; margin: 14px auto 0; max-width: 400px; overflow:hidden; }
+.progresso-bar { height: 8px; background: #ffd700; border-radius: 20px; transition: width .5s; }
+
+.container { max-width: 720px; margin: 0 auto; padding: 20px 16px 40px; }
+
+.card-atividade {
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: var(--sombra);
+  margin-bottom: 24px;
+  overflow: hidden;
+  border: 1.5px solid var(--borda);
+}
+.card-header {
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1.5px solid var(--borda);
+}
+.card-header .num {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 15px; color: white;
+  flex-shrink: 0;
+}
+.card-header h3 { font-size: 15px; font-weight: 700; flex: 1; }
+.card-header .pts { font-size: 12px; color: var(--cinza); background: var(--cinza-claro); padding: 3px 10px; border-radius: 12px; white-space: nowrap; }
+.card-body { padding: 20px; }
+.enunciado { font-size: 15px; color: var(--texto); margin-bottom: 16px; line-height: 1.6; }
+.enunciado strong { color: var(--azul); }
+
+/* MÚLTIPLA ESCOLHA */
+.opcao {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--cinza-claro);
+  border: 2px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all .2s;
+  user-select: none;
+}
+.opcao:hover:not(.bloqueada) { background: var(--azul-claro); border-color: var(--azul); }
+.opcao.correta { background: var(--verde-claro); border-color: var(--verde); }
+.opcao.errada { background: var(--vermelho-claro); border-color: var(--vermelho); }
+.opcao .bolinha {
+  width: 24px; height: 24px; border-radius: 50%;
+  border: 2px solid #cbd5e1;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; flex-shrink: 0;
+  background: white;
+}
+.opcao.correta .bolinha { background: var(--verde); border-color: var(--verde); color: white; }
+.opcao.errada .bolinha { background: var(--vermelho); border-color: var(--vermelho); color: white; }
+
+/* V ou F */
+.vf-lista { display: flex; flex-direction: column; gap: 12px; }
+.vf-item { background: var(--cinza-claro); border-radius: var(--radius-sm); padding: 14px; }
+.vf-texto { font-size: 14px; margin-bottom: 10px; line-height: 1.5; }
+.vf-bts { display: flex; gap: 8px; }
+.vf-bt {
+  padding: 7px 22px; border-radius: var(--radius-sm);
+  border: 2px solid var(--borda); background: white;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: all .2s;
+}
+.vf-bt:hover:not(:disabled) { background: var(--azul-claro); border-color: var(--azul); color: var(--azul); }
+.vf-bt.correta { background: var(--verde-claro); border-color: var(--verde); color: var(--verde); }
+.vf-bt.errada { background: var(--vermelho-claro); border-color: var(--vermelho); color: var(--vermelho); }
+.vf-bt:disabled { cursor: default; }
+
+/* ORDENAR ETAPAS */
+.etapas-lista { display: flex; flex-direction: column; gap: 8px; }
+.etapa-item {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--cinza-claro); border-radius: var(--radius-sm);
+  padding: 12px 14px; cursor: grab; font-size: 14px;
+  border: 2px solid var(--borda);
+  transition: all .2s;
+  user-select: none;
+}
+.etapa-item:active { cursor: grabbing; }
+.etapa-item.drag-over { border-color: var(--azul); background: var(--azul-claro); }
+.etapa-item .drag-handle { font-size: 18px; color: #94a3b8; flex-shrink: 0; }
+.etapa-item .num-etapa {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--azul); color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 13px; flex-shrink: 0;
+}
+.etapa-item.correta { background: var(--verde-claro); border-color: var(--verde); }
+.etapa-item.correta .num-etapa { background: var(--verde); }
+.etapa-item.errada { background: var(--vermelho-claro); border-color: var(--vermelho); }
+.etapa-item.errada .num-etapa { background: var(--vermelho); }
+
+/* RELACIONAR COLUNAS */
+.colunas-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media(max-width: 520px){ .colunas-wrap { grid-template-columns: 1fr; } }
+.col-lista { display: flex; flex-direction: column; gap: 8px; }
+.col-titulo { font-size: 13px; font-weight: 700; color: var(--azul); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 2px; }
+.rel-item {
+  background: var(--cinza-claro); border-radius: var(--radius-sm);
+  padding: 10px 12px; font-size: 13px; border: 2px solid var(--borda);
+  cursor: pointer; transition: all .2s;
+}
+.rel-item.selecionado { border-color: var(--azul); background: var(--azul-claro); }
+.rel-item.ligado-certo { border-color: var(--verde); background: var(--verde-claro); }
+.rel-item.ligado-errado { border-color: var(--vermelho); background: var(--vermelho-claro); }
+
+/* COMPLETAR LACUNAS */
+.lacuna-texto { font-size: 15px; line-height: 2.2; }
+.lacuna-texto input.lacuna {
+  border: none; border-bottom: 2.5px solid var(--azul);
+  background: var(--azul-claro); border-radius: 4px;
+  padding: 2px 8px; font-size: 15px; font-family: inherit;
+  width: 140px; text-align: center; outline: none;
+  color: var(--texto); transition: all .2s;
+}
+.lacuna-texto input.lacuna:focus { background: #dbeafe; }
+.lacuna-texto input.lacuna.correta { background: var(--verde-claro); border-color: var(--verde); color: var(--verde); }
+.lacuna-texto input.lacuna.errada { background: var(--vermelho-claro); border-color: var(--vermelho); color: var(--vermelho); }
+.dicas-lacuna { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.dica-palavra {
+  background: var(--roxo-claro); color: var(--roxo);
+  border-radius: 20px; padding: 4px 14px; font-size: 13px;
+  font-weight: 600; cursor: pointer; border: 1.5px solid #c4b5fd;
+  transition: all .2s;
+}
+.dica-palavra:hover:not(.usada) { background: #ddd6fe; }
+.dica-palavra.usada { opacity: .4; pointer-events: none; }
+
+/* SIMULADOR */
+.sim-url-barra {
+  display: flex; align-items: center; gap: 0;
+  background: var(--cinza-claro); border-radius: 24px;
+  border: 2px solid var(--borda);
+  padding: 6px 16px;
+  margin-bottom: 16px;
+}
+.sim-url-barra span { font-size: 13px; color: var(--cinza); margin-right: 6px; }
+.sim-url-barra strong { font-size: 14px; color: var(--texto); }
+.sim-etapas-vis { display: flex; flex-direction: column; gap: 10px; }
+.sim-passo {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--cinza-claro); border-radius: var(--radius-sm);
+  padding: 12px 14px; border: 2px solid var(--borda);
+  opacity: .35; transition: all .4s;
+}
+.sim-passo.ativo { opacity: 1; border-color: var(--azul); background: var(--azul-claro); }
+.sim-passo.concluido { opacity: 1; border-color: var(--verde); background: var(--verde-claro); }
+.sim-icon { font-size: 22px; flex-shrink: 0; }
+.sim-info { flex: 1; }
+.sim-info b { font-size: 14px; display: block; }
+.sim-info span { font-size: 12px; color: var(--cinza); }
+.sim-passo.ativo .sim-info span { color: var(--azul); }
+.sim-passo.concluido .sim-icon-check { display:inline; }
+.sim-icon-check { display:none; color: var(--verde); font-size: 18px; }
+.sim-bts { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+.sim-bt-nav {
+  background: var(--azul); color: white;
+  border: none; border-radius: var(--radius-sm);
+  padding: 10px 22px; font-size: 14px; font-weight: 700;
+  cursor: pointer; transition: all .2s;
+}
+.sim-bt-nav:hover { background: #1558b0; }
+.sim-bt-nav:disabled { background: #94a3b8; cursor: default; }
+.sim-bt-reiniciar { background: var(--cinza-claro); color: var(--cinza); border: 2px solid var(--borda); border-radius: var(--radius-sm); padding: 10px 18px; font-size: 14px; cursor: pointer; }
+.sim-ip-reveal { display: none; background: var(--amarelo-claro); border: 2px solid var(--amarelo); border-radius: var(--radius-sm); padding: 12px; margin-top: 10px; font-size: 14px; text-align: center; }
+.sim-ip-reveal strong { color: var(--amarelo); font-size: 18px; }
+
+/* ENCONTRAR INTRUSO */
+.intrusos-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+.intruso-item {
+  background: var(--cinza-claro); border-radius: var(--radius-sm);
+  padding: 14px 10px; text-align: center;
+  border: 2px solid var(--borda); cursor: pointer;
+  font-size: 13px; font-weight: 600; transition: all .2s;
+}
+.intruso-item:hover:not(.bloqueado) { background: var(--azul-claro); border-color: var(--azul); }
+.intruso-item .icone-it { font-size: 28px; display: block; margin-bottom: 6px; }
+.intruso-item.correto { background: var(--verde-claro); border-color: var(--verde); color: var(--verde); }
+.intruso-item.errado { background: var(--vermelho-claro); border-color: var(--vermelho); color: var(--vermelho); }
+
+/* FEEDBACK */
+.feedback {
+  margin-top: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  display: none;
+}
+.feedback.certo { background: var(--verde-claro); color: var(--verde); border: 1.5px solid #86efac; display: flex; align-items: center; gap: 6px; }
+.feedback.errado { background: var(--vermelho-claro); color: var(--vermelho); border: 1.5px solid #fca5a5; display: flex; align-items: center; gap: 6px; }
+.feedback.info { background: var(--azul-claro); color: var(--azul); border: 1.5px solid #93c5fd; display: flex; align-items: center; gap: 6px; }
+
+/* BOTÃO CONFIRMAR */
+.bt-confirmar {
+  background: var(--azul); color: white;
+  border: none; border-radius: var(--radius-sm);
+  padding: 11px 28px; font-size: 14px; font-weight: 700;
+  cursor: pointer; margin-top: 14px; transition: all .2s;
+}
+.bt-confirmar:hover:not(:disabled) { background: #1558b0; }
+.bt-confirmar:disabled { background: #94a3b8; cursor: default; }
+
+/* RELATÓRIO FINAL */
+.relatorio {
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: var(--sombra);
+  border: 2px solid var(--azul);
+  padding: 28px 24px;
+  display: none;
+  text-align: center;
+}
+.relatorio.visivel { display: block; }
+.nota-grande {
+  font-size: 72px;
+  font-weight: 900;
+  line-height: 1;
+  margin: 16px 0 8px;
+}
+.nota-msg { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+.stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+.stat-item { background: var(--cinza-claro); border-radius: var(--radius-sm); padding: 14px 8px; }
+.stat-num { font-size: 28px; font-weight: 800; }
+.stat-label { font-size: 12px; color: var(--cinza); margin-top: 2px; }
+.hab-lista { text-align: left; }
+.hab-titulo { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; margin: 14px 0 8px; }
+.hab-item { display: flex; align-items: center; gap: 8px; font-size: 14px; padding: 6px 0; border-bottom: 1px solid var(--borda); }
+.hab-item:last-child { border: none; }
+.hab-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+
+.bt-reiniciar-tudo {
+  background: linear-gradient(135deg, #1a6fd4, #7c3aed);
+  color: white; border: none; border-radius: var(--radius-sm);
+  padding: 14px 36px; font-size: 16px; font-weight: 700;
+  cursor: pointer; margin-top: 20px; transition: all .2s;
+  width: 100%;
+}
+.bt-reiniciar-tudo:hover { opacity: .9; }
+
+.rodape {
+  text-align: center;
+  padding: 20px;
+  font-size: 12px;
+  color: var(--cinza);
+  margin-top: 8px;
+}
+
+@media(max-width: 480px){
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .stat-num { font-size: 22px; }
+}
+</style>
+</head>
+<body>
+
+<div class="topo">
+  <div class="badge">📡 Computação •3</div>
+  <h1>DNS e Endereços IP</h1>
+  <p>Como a internet encontra os sites?</p>
+  <div style="margin-top:14px; display:flex; justify-content:space-between; align-items:center; max-width:400px; margin-left:auto; margin-right:auto;">
+    <span style="font-size:13px; opacity:.8;" id="prog-texto">Atividade 1 de 6</span>
+    <span style="font-size:13px; opacity:.8;" id="pts-texto">0 pts</span>
+  </div>
+  <div class="progresso-bar-wrap">
+    <div class="progresso-bar" id="progresso-bar" style="width:0%"></div>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- ===== ATIVIDADE 1: MÚLTIPLA ESCOLHA ===== -->
+<div class="card-atividade" id="card-1">
+  <div class="card-header">
+    <div class="num" style="background:#1a6fd4">1</div>
+    <h3>Múltipla Escolha — Identificar Conceitos</h3>
+    <span class="pts">1,5 pts</span>
+  </div>
+  <div class="card-body">
+    <p class="enunciado">🖥️ Você digita <strong>www.youtube.com</strong> no navegador. O computador precisa encontrar o servidor do YouTube — mas ele só entende números! Qual "serviço" da internet traduz o nome do site para o número IP correto?</p>
+    <div id="mc-opcoes">
+      <div class="opcao" onclick="responderMC(this, false)" data-correto="false"><div class="bolinha">A</div> O navegador (Chrome, Firefox)</div>
+      <div class="opcao" onclick="responderMC(this, true)" data-correto="true"><div class="bolinha">B</div> O DNS (Domain Name System)</div>
+      <div class="opcao" onclick="responderMC(this, false)" data-correto="false"><div class="bolinha">C</div> O Wi-Fi da sua casa</div>
+      <div class="opcao" onclick="responderMC(this, false)" data-correto="false"><div class="bolinha">D</div> O sistema operacional (Windows/Android)</div>
+    </div>
+    <div class="feedback" id="fb-1"></div>
+  </div>
+</div>
+
+<!-- ===== ATIVIDADE 2: VERDADEIRO OU FALSO ===== -->
+<div class="card-atividade" id="card-2">
+  <div class="card-header">
+    <div class="num" style="background:#7c3aed">2</div>
+    <h3>Verdadeiro ou Falso — Endereços IP</h3>
+    <span class="pts">2,0 pts</span>
+  </div>
+  <div class="card-body">
+    <p class="enunciado">Leia cada afirmação e decida: <strong>Verdadeiro (V)</strong> ou <strong>Falso (F)</strong>?</p>
+    <div class="vf-lista" id="vf-lista">
+      <div class="vf-item" id="vf-0">
+        <p class="vf-texto">1. O endereço IP funciona como o CEP de um dispositivo na internet.</p>
+        <div class="vf-bts">
+          <button class="vf-bt" onclick="responderVF(this, 0, true, true)">✅ Verdadeiro</button>
+          <button class="vf-bt" onclick="responderVF(this, 0, false, true)">❌ Falso</button>
+        </div>
+        <div class="feedback" id="fb-vf-0"></div>
+      </div>
+      <div class="vf-item" id="vf-1">
+        <p class="vf-texto">2. O IPv6 é mais antigo que o IPv4 e tem menos endereços disponíveis.</p>
+        <div class="vf-bts">
+          <button class="vf-bt" onclick="responderVF(this, 1, true, false)">✅ Verdadeiro</button>
+          <button class="vf-bt" onclick="responderVF(this, 1, false, false)">❌ Falso</button>
+        </div>
+        <div class="feedback" id="fb-vf-1"></div>
+      </div>
+      <div class="vf-item" id="vf-2">
+        <p class="vf-texto">3. O IP 192.168.0.1 é um exemplo de endereço IPv4.</p>
+        <div class="vf-bts">
+          <button class="vf-bt" onclick="responderVF(this, 2, true, true)">✅ Verdadeiro</button>
+          <button class="vf-bt" onclick="responderVF(this, 2, false, true)">❌ Falso</button>
+        </div>
+        <div class="feedback" id="fb-vf-2"></div>
+      </div>
+      <div class="vf-item" id="vf-3">
+        <p class="vf-texto">4. Sem o DNS, conseguiríamos acessar os sites normalmente, pois os nomes são suficientes.</p>
+        <div class="vf-bts">
+          <button class="vf-bt" onclick="responderVF(this, 3, true, false)">✅ Verdadeiro</button>
+          <button class="vf-bt" onclick="responderVF(this, 3, false, false)">❌ Falso</button>
+        </div>
+        <div class="feedback" id="fb-vf-3"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ATIVIDADE 3: ORDENAR ETAPAS ===== -->
+<div class="card-atividade" id="card-3">
+  <div class="card-header">
+    <div class="num" style="background:#16a34a">3</div>
+    <h3>Ordenar Etapas — Sequência do DNS</h3>
+    <span class="pts">2,0 pts</span>
+  </div>
+  <div class="card-body">
+    <p class="enunciado">🗂️ As etapas do processo DNS estão embaralhadas! <strong>Arraste e solte</strong> para colocá-las na ordem correta (1 → 4):</p>
+    <div class="etapas-lista" id="etapas-lista">
+      <!-- preenchido pelo JS -->
+    </div>
+    <button class="bt-confirmar" id="bt-conf-etapas" onclick="verificarEtapas()">Verificar Ordem</button>
+    <div class="feedback" id="fb-etapas"></div>
+  </div>
+</div>
+
+<!-- ===== ATIVIDADE 4: COMPLETAR LACUNAS ===== -->
+<div class="card-atividade" id="card-4">
+  <div class="card-header">
+    <div class="num" style="background:#ea580c">4</div>
+    <h3>Completar Lacunas — Conceitos-chave</h3>
+    <span class="pts">1,5 pts</span>
+  </div>
+  <div class="card-body">
+    <p class="enunciado">📝 Complete o parágrafo usando as palavras do banco abaixo. Clique na palavra e depois na lacuna correspondente!</p>
+    <div class="lacuna-texto" id="lacuna-texto">
+      O <input class="lacuna" id="l1" placeholder="?" readonly> é um sistema que funciona como uma grande agenda telefônica da internet. Quando digitamos um endereço, ele converte o nome do site em um <input class="lacuna" id="l2" placeholder="?" readonly> numérico. Existem dois tipos de IP: o <input class="lacuna" id="l3" placeholder="?" readonly>, mais antigo com 4 grupos de números, e o <input class="lacuna" id="l4" placeholder="?" readonly>, mais moderno e com muito mais endereços disponíveis.
+    </div>
+    <div class="dicas-lacuna" id="banco-palavras">
+      <span class="dica-palavra" onclick="selecionarPalavra(this)" data-palavra="DNS">DNS</span>
+      <span class="dica-palavra" onclick="selecionarPalavra(this)" data-palavra="endereço IP">endereço IP</span>
+      <span class="dica-palavra" onclick="selecionarPalavra(this)" data-palavra="IPv4">IPv4</span>
+      <span class="dica-palavra" onclick="selecionarPalavra(this)" data-palavra="IPv6">IPv6</span>
+      <span class="dica-palavra" onclick="selecionarPalavra(this)" data-palavra="HTTP">HTTP</span>
+    </div>
+    <div style="margin-top:6px; font-size:12px; color:var(--cinza);">💡 Clique em uma palavra do banco, depois clique na lacuna correta para preenchê-la.</div>
+    <button class="bt-confirmar" id="bt-conf-lacunas" onclick="verificarLacunas()">Verificar Respostas</button>
+    <div class="feedback" id="fb-lacunas"></div>
+  </div>
+</div>
+
+<!-- ===== ATIVIDADE 5: ENCONTRAR O INTRUSO ===== -->
+<div class="card-atividade" id="card-5">
+  <div class="card-header">
+    <div class="num" style="background:#d97706">5</div>
+    <h3>Encontrar o Intruso — Classificar IPs</h3>
+    <span class="pts">1,5 pts</span>
+  </div>
+  <div class="card-body">
+    <p class="enunciado">🔍 Abaixo há três endereços IPv4 e <strong>um intruso</strong>: um endereço IPv6 disfarçado! Clique no endereço que NÃO é um IPv4:</p>
+    <div class="intrusos-grid">
+      <div class="intruso-item" onclick="clicarIntruso(this, false)"><span class="icone-it">🏠</span>192.168.1.1</div>
+      <div class="intruso-item" onclick="clicarIntruso(this, true)"><span class="icone-it">🔮</span>2001:db8::1</div>
+      <div class="intruso-item" onclick="clicarIntruso(this, false)"><span class="icone-it">🏠</span>10.0.0.254</div>
+      <div class="intruso-item" onclick="clicarIntruso(this, false)"><span class="icone-it">🏠</span>172.16.0.1</div>
+    </div>
+    <div class="feedback" id="fb-intruso"></div>
+  </div>
+</div>
+
+<!-- ===== ATIVIDADE 6: SIMULADOR DNS ===== -->
+<div class="card-atividade" id="card-6">
+  <div class="card-header">
+    <div class="num" style="background:#0891b2">6</div>
+    <h3>Simulador — Jornada do DNS</h3>
+    <span class="pts">1,5 pts</span>
+  </div>
+  <div class="card-body">
+    <p class="enunciado">🚀 Simule o caminho completo de uma requisição DNS! Clique em <strong>"Próxima etapa"</strong> para avançar passo a passo e responda a pergunta ao final.</p>
+    <div class="sim-url-barra">
+      <span>🌐</span>
+      <strong>www.instagram.com</strong>
+    </div>
+    <div class="sim-etapas-vis" id="sim-etapas">
+      <div class="sim-passo" id="sp-0">
+        <div class="sim-icon">⌨️</div>
+        <div class="sim-info">
+          <b>Você digita o endereço</b>
+          <span>www.instagram.com é digitado no navegador</span>
+        </div>
+        <span class="sim-icon-check">✅</span>
+      </div>
+      <div class="sim-passo" id="sp-1">
+        <div class="sim-icon">🖥️</div>
+        <div class="sim-info">
+          <b>Seu computador pergunta ao DNS</b>
+          <span>"Qual é o IP de www.instagram.com?"</span>
+        </div>
+        <span class="sim-icon-check">✅</span>
+      </div>
+      <div class="sim-passo" id="sp-2">
+        <div class="sim-icon">📒</div>
+        <div class="sim-info">
+          <b>O servidor DNS consulta sua "agenda"</b>
+          <span>Procura o nome na lista de endereços IP...</span>
+        </div>
+        <span class="sim-icon-check">✅</span>
+      </div>
+      <div class="sim-passo" id="sp-3">
+        <div class="sim-icon">📨</div>
+        <div class="sim-info">
+          <b>DNS responde com o endereço IP</b>
+          <span id="sp3-span">O IP é revelado ao seu computador</span>
+        </div>
+        <span class="sim-icon-check">✅</span>
+      </div>
+      <div class="sim-passo" id="sp-4">
+        <div class="sim-icon">🌍</div>
+        <div class="sim-info">
+          <b>Seu navegador acessa o servidor</b>
+          <span>O site é carregado!</span>
+        </div>
+        <span class="sim-icon-check">✅</span>
+      </div>
+    </div>
+    <div class="sim-ip-reveal" id="sim-ip-reveal">
+      O DNS respondeu: o IP do Instagram é <strong>157.240.229.174</strong> 🎉
+    </div>
+    <div class="sim-bts">
+      <button class="sim-bt-nav" id="bt-proxima-sim" onclick="simProxima()">Próxima etapa →</button>
+      <button class="sim-bt-reiniciar" onclick="simReiniciar()">↺ Reiniciar</button>
+    </div>
+    <div id="sim-pergunta" style="display:none; margin-top:20px;">
+      <p class="enunciado">🤔 <strong>Questão final do simulador:</strong> Qual é a principal função do DNS nesse processo?</p>
+      <div id="sim-mc-opcoes">
+        <div class="opcao" onclick="responderSimMC(this, false)"><div class="bolinha">A</div> Proteger o site contra vírus</div>
+        <div class="opcao" onclick="responderSimMC(this, false)"><div class="bolinha">B</div> Deixar o site mais rápido</div>
+        <div class="opcao" onclick="responderSimMC(this, true)"><div class="bolinha">C</div> Traduzir o nome do site para o endereço IP</div>
+        <div class="opcao" onclick="responderSimMC(this, false)"><div class="bolinha">D</div> Criar o endereço do site</div>
+      </div>
+      <div class="feedback" id="fb-sim"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== RELATÓRIO FINAL ===== -->
+<div class="relatorio" id="relatorio">
+  <div style="font-size:48px; margin-bottom:4px;" id="rel-emoji">🏆</div>
+  <h2 style="font-size:18px; color:var(--cinza); margin-bottom:4px;">Sua nota final</h2>
+  <div class="nota-grande" id="rel-nota" style="color:var(--azul)">—</div>
+  <div class="nota-msg" id="rel-msg">—</div>
+  <div class="stats-grid">
+    <div class="stat-item"><div class="stat-num" id="rel-acertos" style="color:var(--verde)">—</div><div class="stat-label">Acertos</div></div>
+    <div class="stat-item"><div class="stat-num" id="rel-erros" style="color:var(--vermelho)">—</div><div class="stat-label">Erros</div></div>
+    <div class="stat-item"><div class="stat-num" id="rel-pct" style="color:var(--azul)">—</div><div class="stat-label">Aproveitamento</div></div>
+  </div>
+  <div class="hab-lista">
+    <div class="hab-titulo" style="color:var(--verde)">✅ Habilidades dominadas</div>
+    <div id="rel-dominadas"></div>
+    <div class="hab-titulo" style="color:var(--vermelho); margin-top:14px;">📚 Habilidades a retomar</div>
+    <div id="rel-retomar"></div>
+  </div>
+  <button class="bt-reiniciar-tudo" onclick="reiniciarTudo()">🔄 Tentar novamente</button>
+</div>
+
+</div><!-- /container -->
+
+<div class="rodape">
+  Profª Adriana Bett Terebinto | Atividade Pedagógica — DNS e Endereços IP | 7º Ano
+</div>
+
+<script>
+const TOTAL_PTS = 10;
+let pontos = 0;
+let atividadesConcluidas = 0;
+const totalAtividades = 6;
+
+const habilidades = [
+  { id: 'h1', nome: 'Identificar a função do DNS', atv: 1, conquistada: false },
+  { id: 'h2', nome: 'Compreender endereços IP (V/F)', atv: 2, conquistada: false },
+  { id: 'h3', nome: 'Ordenar sequência DNS', atv: 3, conquistada: false },
+  { id: 'h4', nome: 'Conhecer conceitos DNS/IP', atv: 4, conquistada: false },
+  { id: 'h5', nome: 'Diferenciar IPv4 e IPv6', atv: 5, conquistada: false },
+  { id: 'h6', nome: 'Simular e compreender o processo DNS', atv: 6, conquistada: false },
+];
+
+function atualizarProgresso() {
+  const pct = (atividadesConcluidas / totalAtividades) * 100;
+  document.getElementById('progresso-bar').style.width = pct + '%';
+  document.getElementById('prog-texto').textContent = `Atividade ${Math.min(atividadesConcluidas + 1, totalAtividades)} de ${totalAtividades}`;
+  document.getElementById('pts-texto').textContent = pontos.toFixed(1).replace('.', ',') + ' pts';
+}
+
+// ===== AT 1: MÚLTIPLA ESCOLHA =====
+let mcFeito = false;
+function responderMC(el, correto) {
+  if (mcFeito) return;
+  mcFeito = true;
+  document.querySelectorAll('#mc-opcoes .opcao').forEach(o => o.classList.add('bloqueada'));
+  const fb = document.getElementById('fb-1');
+  if (correto) {
+    el.classList.add('correta');
+    el.querySelector('.bolinha').textContent = '✓';
+    pontos += 1.5;
+    fb.className = 'feedback certo';
+    fb.innerHTML = '✅ <span>Exato! O DNS traduz nomes de sites para endereços IP que o computador entende.</span>';
+    habilidades[0].conquistada = true;
+  } else {
+    el.classList.add('errada');
+    el.querySelector('.bolinha').textContent = '✗';
+    fb.className = 'feedback errado';
+    fb.innerHTML = '❌ <span>Não é essa. O serviço responsável por traduzir nomes para IPs é o <strong>DNS</strong> (Domain Name System).</span>';
+    document.querySelectorAll('#mc-opcoes .opcao')[1].classList.add('correta');
+  }
+  fb.style.display = 'flex';
+  atividadesConcluidas++;
+  atualizarProgresso();
+  verificarFim();
+}
+
+// ===== AT 2: V ou F =====
+const vfRespostas = [null, null, null, null];
+const vfGabarito = [true, false, true, false];
+const vfExplicacoes = [
+  '✅ Verdadeiro! O IP funciona como o CEP: identifica unicamente cada dispositivo na internet.',
+  '✅ Falso! O IPv6 é o MAIS NOVO e tem MUITO MAIS endereços que o IPv4.',
+  '✅ Verdadeiro! 192.168.0.1 tem 4 grupos de números — formato típico do IPv4.',
+  '✅ Falso! Sem o DNS precisaríamos decorar os IPs numéricos de cada site — praticamente impossível!'
+];
+let vfPtsGanhos = 0;
+let vfQtdRespondidas = 0;
+
+function responderVF(btEl, idx, resposta, gabarito) {
+  if (vfRespostas[idx] !== null) return;
+  vfRespostas[idx] = resposta;
+  const item = document.getElementById('vf-' + idx);
+  const bts = item.querySelectorAll('.vf-bt');
+  bts.forEach(b => b.disabled = true);
+  const fb = document.getElementById('fb-vf-' + idx);
+  const correto = (resposta === gabarito);
+  btEl.classList.add(correto ? 'correta' : 'errada');
+  if (!correto) {
+    bts.forEach(b => { if (b !== btEl && b.textContent.includes(gabarito ? 'Verdadeiro' : 'Falso')) b.classList.add('correta'); });
+  }
+  fb.className = 'feedback ' + (correto ? 'certo' : 'errado');
+  fb.innerHTML = (correto ? '' : '❌ ') + vfExplicacoes[idx];
+  fb.style.display = 'flex';
+  if (correto) vfPtsGanhos += 0.5;
+  vfQtdRespondidas++;
+  if (vfQtdRespondidas === 4) {
+    pontos += vfPtsGanhos;
+    if (vfPtsGanhos >= 1.5) habilidades[1].conquistada = true;
+    atividadesConcluidas++;
+    atualizarProgresso();
+    verificarFim();
+  }
+}
+
+// ===== AT 3: ORDENAR ETAPAS =====
+const etapasTextos = [
+  'Seu navegador carrega o site usando o IP recebido',
+  'Você digita www.youtube.com no navegador',
+  'O DNS responde com o endereço IP correto',
+  'Seu computador pergunta ao servidor DNS qual é o IP'
+];
+const etapasOrdemCorreta = [1, 3, 2, 0];
+let dragIdx = null;
+let etapasFeito = false;
+
+function buildEtapas() {
+  const lista = document.getElementById('etapas-lista');
+  lista.innerHTML = '';
+  etapasTextos.forEach((txt, i) => {
+    const div = document.createElement('div');
+    div.className = 'etapa-item';
+    div.draggable = true;
+    div.dataset.idx = i;
+    div.innerHTML = `<span class="drag-handle">⠿</span><div class="num-etapa">${i + 1}</div><span>${txt}</span>`;
+    div.addEventListener('dragstart', e => { dragIdx = parseInt(div.dataset.idx); div.style.opacity = '.5'; });
+    div.addEventListener('dragend', () => { div.style.opacity = '1'; dragIdx = null; });
+    div.addEventListener('dragover', e => { e.preventDefault(); div.classList.add('drag-over'); });
+    div.addEventListener('dragleave', () => div.classList.remove('drag-over'));
+    div.addEventListener('drop', e => {
+      e.preventDefault();
+      div.classList.remove('drag-over');
+      const targetIdx = parseInt(div.dataset.idx);
+      if (dragIdx === null || dragIdx === targetIdx) return;
+      const items = [...lista.querySelectorAll('.etapa-item')];
+      const dragEl = items.find(el => parseInt(el.dataset.idx) === dragIdx);
+      const targetEl = items.find(el => parseInt(el.dataset.idx) === targetIdx);
+      const tmp = dragEl.dataset.idx;
+      dragEl.dataset.idx = targetEl.dataset.idx;
+      targetEl.dataset.idx = tmp;
+      const pos = items.indexOf(targetEl);
+      if (items.indexOf(dragEl) < pos) targetEl.after(dragEl);
+      else targetEl.before(dragEl);
+      items.forEach((el, i) => el.querySelector('.num-etapa').textContent = i + 1);
+    });
+    lista.appendChild(div);
+  });
+}
+buildEtapas();
+
+function verificarEtapas() {
+  if (etapasFeito) return;
+  etapasFeito = true;
+  const items = [...document.querySelectorAll('#etapas-lista .etapa-item')];
+  const ordem = items.map(el => parseInt(el.dataset.idx));
+  let acertos = 0;
+  items.forEach((el, pos) => {
+    const textoCorrespondente = etapasOrdemCorreta[pos];
+    const correto = parseInt(el.dataset.idx) === textoCorrespondente;
+    el.classList.add(correto ? 'correta' : 'errada');
+    if (correto) acertos++;
+  });
+  const fb = document.getElementById('fb-etapas');
+  document.getElementById('bt-conf-etapas').disabled = true;
+  document.querySelectorAll('#etapas-lista .etapa-item').forEach(el => el.draggable = false);
+  let pts = 0;
+  if (acertos === 4) {
+    pts = 2; fb.className = 'feedback certo';
+    fb.innerHTML = '✅ <span>Perfeito! A ordem correta: digitar → perguntar ao DNS → DNS responde → carregar o site.</span>';
+    habilidades[2].conquistada = true;
+  } else if (acertos >= 2) {
+    pts = 1; fb.className = 'feedback info';
+    fb.innerHTML = `ℹ️ <span>${acertos} de 4 posições corretas! Revise a sequência DNS: digitar, perguntar, responder, carregar.</span>`;
+  } else {
+    fb.className = 'feedback errado';
+    fb.innerHTML = '❌ <span>A ordem correta é: 1) Digitar o site 2) Perguntar ao DNS 3) DNS responde com o IP 4) Navegador carrega o site.</span>';
+  }
+  fb.style.display = 'flex';
+  pontos += pts;
+  atividadesConcluidas++;
+  atualizarProgresso();
+  verificarFim();
+}
+
+// ===== AT 4: LACUNAS =====
+let palavraSelecionada = null;
+const lacunaGabarito = { l1: 'DNS', l2: 'endereço IP', l3: 'IPv4', l4: 'IPv6' };
+let lacunasFeito = false;
+
+function selecionarPalavra(el) {
+  if (el.classList.contains('usada') || lacunasFeito) return;
+  document.querySelectorAll('.dica-palavra').forEach(p => p.style.outline = 'none');
+  palavraSelecionada = el.dataset.palavra;
+  el.style.outline = '3px solid var(--azul)';
+  document.querySelectorAll('.lacuna').forEach(l => {
+    if (!l.value) l.addEventListener('click', preencherLacuna);
+  });
+}
+
+function preencherLacuna(e) {
+  if (!palavraSelecionada || lacunasFeito) return;
+  const inp = e.target;
+  if (inp.value) return;
+  inp.value = palavraSelecionada;
+  document.querySelectorAll('.dica-palavra').forEach(p => {
+    if (p.dataset.palavra === palavraSelecionada) p.classList.add('usada');
+  });
+  palavraSelecionada = null;
+  document.querySelectorAll('.dica-palavra').forEach(p => p.style.outline = 'none');
+  e.target.removeEventListener('click', preencherLacuna);
+}
+
+document.querySelectorAll('.lacuna').forEach(l => {
+  l.addEventListener('click', function(e) { if (palavraSelecionada && !lacunasFeito && !l.value) preencherLacuna(e); });
+});
+
+function verificarLacunas() {
+  if (lacunasFeito) return;
+  lacunasFeito = true;
+  let acertos = 0;
+  Object.entries(lacunaGabarito).forEach(([id, resp]) => {
+    const inp = document.getElementById(id);
+    if (inp.value.trim().toLowerCase() === resp.toLowerCase()) {
+      inp.classList.add('correta'); acertos++;
+    } else {
+      inp.classList.add('errada');
+      inp.value = inp.value + ' ✗ → ' + resp;
+    }
+    inp.readOnly = true;
+  });
+  const fb = document.getElementById('fb-lacunas');
+  document.getElementById('bt-conf-lacunas').disabled = true;
+  let pts = 0;
+  if (acertos === 4) {
+    pts = 1.5; fb.className = 'feedback certo';
+    fb.innerHTML = '✅ <span>Perfeito! Todas as lacunas preenchidas corretamente!</span>';
+    habilidades[3].conquistada = true;
+  } else if (acertos >= 2) {
+    pts = 0.75; fb.className = 'feedback info';
+    fb.innerHTML = `ℹ️ <span>${acertos} de 4 acertados. Reveja: DNS = agenda da internet; IP = número do servidor; IPv4 = 4 grupos; IPv6 = mais moderno.</span>`;
+  } else {
+    fb.className = 'feedback errado';
+    fb.innerHTML = '❌ <span>Menos de 2 acertos. Releia o texto da aula sobre DNS e IP!</span>';
+  }
+  fb.style.display = 'flex';
+  pontos += pts;
+  atividadesConcluidas++;
+  atualizarProgresso();
+  verificarFim();
+}
+
+// ===== AT 5: INTRUSO =====
+let intrusoFeito = false;
+function clicarIntruso(el, correto) {
+  if (intrusoFeito) return;
+  intrusoFeito = true;
+  document.querySelectorAll('.intruso-item').forEach(i => i.classList.add('bloqueado'));
+  const fb = document.getElementById('fb-intruso');
+  if (correto) {
+    el.classList.add('correto');
+    pontos += 1.5;
+    fb.className = 'feedback certo';
+    fb.innerHTML = '✅ <span><strong>2001:db8::1</strong> é um endereço <strong>IPv6</strong> (usa letras e dois pontos). Os outros 3 são IPv4 (4 grupos numéricos).</span>';
+    habilidades[4].conquistada = true;
+  } else {
+    el.classList.add('errado');
+    fb.className = 'feedback errado';
+    fb.innerHTML = '❌ <span>Este é um IPv4! O intruso é <strong>2001:db8::1</strong>, que usa o formato IPv6 (com letras e "::").</span>';
+    document.querySelectorAll('.intruso-item')[1].classList.add('correto');
+  }
+  fb.style.display = 'flex';
+  atividadesConcluidas++;
+  atualizarProgresso();
+  verificarFim();
+}
+
+// ===== AT 6: SIMULADOR =====
+let simPasso = 0;
+const totalPassos = 5;
+
+function simProxima() {
+  const bt = document.getElementById('bt-proxima-sim');
+  if (simPasso > 0) {
+    const prev = document.getElementById('sp-' + (simPasso - 1));
+    prev.classList.remove('ativo');
+    prev.classList.add('concluido');
+    prev.querySelector('.sim-icon-check').style.display = 'inline';
+  }
+  if (simPasso < totalPassos) {
+    const curr = document.getElementById('sp-' + simPasso);
+    curr.classList.add('ativo');
+    if (simPasso === 3) document.getElementById('sim-ip-reveal').style.display = 'block';
+    simPasso++;
+  }
+  if (simPasso === totalPassos) {
+    const last = document.getElementById('sp-' + (totalPassos - 1));
+    setTimeout(() => {
+      last.classList.remove('ativo');
+      last.classList.add('concluido');
+      last.querySelector('.sim-icon-check').style.display = 'inline';
+    }, 400);
+    bt.disabled = true;
+    setTimeout(() => document.getElementById('sim-pergunta').style.display = 'block', 600);
+  }
+}
+
+function simReiniciar() {
+  simPasso = 0;
+  for (let i = 0; i < totalPassos; i++) {
+    const p = document.getElementById('sp-' + i);
+    p.className = 'sim-passo';
+    p.querySelector('.sim-icon-check').style.display = 'none';
+  }
+  document.getElementById('sim-ip-reveal').style.display = 'none';
+  document.getElementById('bt-proxima-sim').disabled = false;
+  document.getElementById('sim-pergunta').style.display = 'none';
+}
+
+let simFeito = false;
+function responderSimMC(el, correto) {
+  if (simFeito) return;
+  simFeito = true;
+  document.querySelectorAll('#sim-mc-opcoes .opcao').forEach(o => o.classList.add('bloqueada'));
+  const fb = document.getElementById('fb-sim');
+  if (correto) {
+    el.classList.add('correta');
+    el.querySelector('.bolinha').textContent = '✓';
+    pontos += 1.5;
+    fb.className = 'feedback certo';
+    fb.innerHTML = '✅ <span>Correto! O DNS é a "agenda telefônica" da internet: traduz nomes de domínio para endereços IP numéricos.</span>';
+    habilidades[5].conquistada = true;
+  } else {
+    el.classList.add('errada');
+    el.querySelector('.bolinha').textContent = '✗';
+    fb.className = 'feedback errado';
+    fb.innerHTML = '❌ <span>Não é essa. A função principal do DNS é <strong>traduzir nomes de sites em endereços IP</strong>.</span>';
+    document.querySelectorAll('#sim-mc-opcoes .opcao')[2].classList.add('correta');
+  }
+  fb.style.display = 'flex';
+  atividadesConcluidas++;
+  atualizarProgresso();
+  verificarFim();
+}
+
+// ===== RELATÓRIO =====
+function verificarFim() {
+  if (atividadesConcluidas < totalAtividades) return;
+  setTimeout(mostrarRelatorio, 800);
+}
+
+function mostrarRelatorio() {
+  const nota = Math.min(10, Math.round(pontos * 10) / 10);
+  const totalQuestoes = 13;
+  const acertos = Math.round((pontos / 10) * totalQuestoes);
+  const erros = totalQuestoes - acertos;
+  const pct = Math.round((pontos / 10) * 100);
+
+  document.getElementById('rel-nota').textContent = nota.toFixed(1).replace('.', ',');
+  document.getElementById('rel-acertos').textContent = acertos;
+  document.getElementById('rel-erros').textContent = erros;
+  document.getElementById('rel-pct').textContent = pct + '%';
+
+  let emoji, msg, cor;
+  if (nota >= 9) { emoji = '🏆'; msg = 'Excelente domínio do conteúdo!'; cor = 'var(--verde)'; }
+  else if (nota >= 7) { emoji = '⭐'; msg = 'Bom domínio do conteúdo!'; cor = 'var(--azul)'; }
+  else if (nota >= 5) { emoji = '📖'; msg = 'Domínio parcial. Recomenda-se revisão!'; cor = 'var(--amarelo)'; }
+  else { emoji = '💪'; msg = 'Necessita reforço e retomada do conteúdo!'; cor = 'var(--vermelho)'; }
+
+  document.getElementById('rel-emoji').textContent = emoji;
+  document.getElementById('rel-msg').textContent = msg;
+  document.getElementById('rel-nota').style.color = cor;
+
+  const dominadas = document.getElementById('rel-dominadas');
+  const retomar = document.getElementById('rel-retomar');
+  dominadas.innerHTML = '';
+  retomar.innerHTML = '';
+
+  habilidades.forEach(h => {
+    const div = document.createElement('div');
+    div.className = 'hab-item';
+    div.innerHTML = `<div class="hab-dot" style="background:${h.conquistada ? 'var(--verde)' : 'var(--vermelho)'}"></div><span>${h.nome}</span>`;
+    (h.conquistada ? dominadas : retomar).appendChild(div);
+  });
+
+  if (!dominadas.children.length) dominadas.innerHTML = '<div class="hab-item" style="color:var(--cinza);font-size:13px;">Nenhuma habilidade totalmente dominada</div>';
+  if (!retomar.children.length) retomar.innerHTML = '<div class="hab-item" style="color:var(--cinza);font-size:13px;">Nenhuma habilidade a retomar — parabéns!</div>';
+
+  document.getElementById('relatorio').classList.add('visivel');
+  document.getElementById('relatorio').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function reiniciarTudo() {
+  location.reload();
+}
+
+atualizarProgresso();
+</script>
+</body>
+</html>
